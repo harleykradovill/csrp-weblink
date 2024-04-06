@@ -1,5 +1,5 @@
-# CSRP /rti and OOV Detection Integration
+# Coastal State Roleplay Weblink
 
-Handles /rti (route to incident), as well as OOV detection via API. All verification matching done via FiveM Discord identifier.
+API FiveM Integration
 
 https://www.coastalstateroleplay.com/
