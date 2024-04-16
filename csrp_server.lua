@@ -20,7 +20,7 @@ AddEventHandler('updateVehicleStatus', function(isInVehicleClass18)
             ["oov?"] = not isInVehicleClass18
         })
 
-        PerformHttpRequest(cadURL, function(err, text, headers)
+        PerformHttpRequest(oovURL, function(err, text, headers)
         end, 'POST', payload, { ["Content-Type"] = 'application/json' })
     end
 end)
@@ -47,7 +47,7 @@ AddEventHandler('sendVehicleRegistration', function(plate, make, model, color)
 	    color = color
         }
 
-        PerformHttpRequest(cadURL, function(err, text, headers)
+        PerformHttpRequest(vehregURL, function(err, text, headers)
             if err == 200 then
 		TriggerClientEvent('showVehicleRegistrationNotification', playerSource, text)
             else
