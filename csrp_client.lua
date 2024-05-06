@@ -1,3 +1,36 @@
+json = require("json")
+
+RegisterCommand('rti', function()
+    TriggerServerEvent('fetchIncidentDetails')
+end, false)
+
+RegisterNetEvent("setGpsRoute")
+AddEventHandler("setGpsRoute", function(postalCode)
+    local postals = LoadResourceFile(GetCurrentResourceName(), 'postals.json')
+    if not postals then
+        print("Error: Unable to load postals.json")
+        return
+    end
+
+    local postalData = json.decode(postals)
+    local targetCoords = nil
+
+    for _, postal in pairs(postalData) do
+        if tostring(postal.code) == tostring(postalCode) then
+            targetCoords = vector3(postal.x, postal.y, postal.z or 0)
+            break
+        end
+    end
+
+    if targetCoords then
+        SetNewWaypoint(targetCoords.x, targetCoords.y)
+        -- print("Waypoint set to postal code: " .. tostring(postalCode))
+        drawNotification("Waypoint Set: " .. tostring(postalCode))
+    else
+        print("Error: Postal code not found in postals.json")
+    end
+end)
+
 local wasInVehicleClass18 = false
 Citizen.CreateThread(function()
     while true do
