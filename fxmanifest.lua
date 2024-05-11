@@ -9,3 +9,4 @@ server_script 'csrp_server.lua'
 
 -- Other Files
 file 'postals.json'
+file 'vehicle-colors.json'
