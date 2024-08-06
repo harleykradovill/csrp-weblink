@@ -90,6 +90,34 @@ AddEventHandler("showVehicleRegistrationNotification", function(message)
     drawNotification(message)
 end)
 
+RegisterCommand('showid', function()
+    TriggerServerEvent('showId')
+end, false)
+
+RegisterNetEvent("displayId")
+AddEventHandler("displayId", function(playerSource, name, dob)
+    local playerPed = PlayerPedId()
+    local players = GetActivePlayers()
+    local playerCoords = GetEntityCoords(playerPed)
+    local radius = 10.0 -- Message Radius
+
+    local currentPlayerName = GetPlayerName(PlayerId())
+
+    for _, playerId in ipairs(players) do
+        local targetPed = GetPlayerPed(playerId)
+        local targetCoords = GetEntityCoords(targetPed)
+        local distance = #(playerCoords - targetCoords)
+
+        if distance <= radius then
+            TriggerEvent('chat:addMessage', {
+                color = { 255, 255, 255 },
+                multiline = true,
+                args = {"", "^2" .. currentPlayerName .. " Shows ID:^0 " .. name .. " " .. dob}
+            })
+        end
+    end
+end)
+
 
 -- UNIVERSAL FUNCTION TO DRAW NOTIFICATION
 
