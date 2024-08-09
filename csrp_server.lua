@@ -97,7 +97,8 @@ end)
 RegisterServerEvent('showId')
 AddEventHandler('showId', function()
     local playerSource = source
-    local playerIdentifiers = GetPlayerIdentifiers(source)
+    local playerName = GetPlayerName(playerSource)
+    local playerIdentifiers = GetPlayerIdentifiers(playerSource)
     local discordId = nil
 
     for _, identifier in pairs(playerIdentifiers) do
@@ -116,7 +117,7 @@ AddEventHandler('showId', function()
                     local name = data.response.name
                     local dob = data.response.dob
                     if name and dob then
-                        TriggerClientEvent('displayId', -1, playerSource, name, dob)
+                        TriggerClientEvent('displayId', -1, playerSource, playerName, name, dob)
                     else
                         print("Error: Invalid data received from API. Data: " .. text)
                     end
@@ -131,4 +132,5 @@ AddEventHandler('showId', function()
         print("Error: Discord ID not found for the player.")
     end
 end)
+
 
