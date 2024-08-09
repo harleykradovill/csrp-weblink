@@ -132,5 +132,3 @@ AddEventHandler('showId', function()
         print("Error: Discord ID not found for the player.")
     end
 end)
-
-
