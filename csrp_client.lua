@@ -95,28 +95,28 @@ RegisterCommand('showid', function()
 end, false)
 
 RegisterNetEvent("displayId")
-AddEventHandler("displayId", function(playerSource, name, dob)
+AddEventHandler("displayId", function(playerSource, senderName, name, dob)
+    local myID = PlayerId()
+    local senderID = GetPlayerFromServerId(playerSource)
     local playerPed = PlayerPedId()
-    local players = GetActivePlayers()
     local playerCoords = GetEntityCoords(playerPed)
-    local radius = 10.0 -- Message Radius
+    local radius = 10.0 
 
-    local currentPlayerName = GetPlayerName(PlayerId())
-
-    for _, playerId in ipairs(players) do
-        local targetPed = GetPlayerPed(playerId)
-        local targetCoords = GetEntityCoords(targetPed)
-        local distance = #(playerCoords - targetCoords)
-
-        if distance <= radius then
-            TriggerEvent('chat:addMessage', {
-                color = { 255, 255, 255 },
-                multiline = true,
-                args = {"", "^2" .. currentPlayerName .. " Shows ID:^0 " .. name .. " " .. dob}
-            })
-        end
+    if senderID == myID then
+        TriggerEvent('chat:addMessage', {
+            color = { 255, 255, 255 },
+            multiline = true,
+            args = {"", "^2You Show ID:^0 " .. name .. " " .. dob}
+        })
+    elseif GetDistanceBetweenCoords(playerCoords, GetEntityCoords(GetPlayerPed(senderID)), true) <= radius then
+        TriggerEvent('chat:addMessage', {
+            color = { 255, 255, 255 },
+            multiline = true,
+            args = {"", "^2" .. senderName .. " Shows ID:^0 " .. name .. " " .. dob}
+        })
     end
 end)
+
 
 
 -- UNIVERSAL FUNCTION TO DRAW NOTIFICATION
