@@ -1,7 +1,9 @@
-local oovURL = 'https://coastalstateroleplay.bubbleapps.io/api/1.1/wf/setoov?api_token=[]'
-local vehregURL = 'https://coastalstateroleplay.bubbleapps.io/api/1.1/wf/registervehicle?api_token=[]'
-local rtiURL = 'https://coastalstateroleplay.bubbleapps.io/api/1.1/wf/incidentdetails?api_token=[]'
-local showidURL = 'https://coastalstateroleplay.bubbleapps.io/api/1.1/wf/showid?api_token=[]'
+local apiKey = ''
+
+local oovURL = 'https://coastalstateroleplay.bubbleapps.io/api/1.1/wf/setoov?api_token=' .. apiKey
+local vehregURL = 'https://coastalstateroleplay.bubbleapps.io/api/1.1/wf/registervehicle?api_token=' .. apiKey
+local rtiURL = 'https://coastalstateroleplay.bubbleapps.io/api/1.1/wf/incidentdetails?api_token=' .. apiKey
+local showidURL = 'https://coastalstateroleplay.bubbleapps.io/api/1.1/wf/showid?api_token=' .. apiKey
 
 RegisterServerEvent('fetchIncidentDetails')
 AddEventHandler('fetchIncidentDetails', function()
