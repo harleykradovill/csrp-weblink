@@ -1,5 +1,13 @@
 json = require("json")
 
+-- Add command suggestions
+TriggerEvent('chat:addSuggestion', '/rti', 'Set a GPS route to your selected call', {})
+
+TriggerEvent('chat:addSuggestion', '/vehreg', 'Register your current vehicle to your selected identity', {})
+
+TriggerEvent('chat:addSuggestion', '/showid', 'Show your selected identity to nearby players', {})
+
+
 RegisterCommand('rti', function()
     TriggerServerEvent('fetchIncidentDetails')
 end, false)
@@ -96,19 +104,12 @@ end, false)
 
 RegisterNetEvent("displayId")
 AddEventHandler("displayId", function(playerSource, senderName, name, dob)
-    local myID = PlayerId()
     local senderID = GetPlayerFromServerId(playerSource)
     local playerPed = PlayerPedId()
     local playerCoords = GetEntityCoords(playerPed)
     local radius = 10.0 
 
-    if senderID == myID then
-        TriggerEvent('chat:addMessage', {
-            color = { 255, 255, 255 },
-            multiline = true,
-            args = {"", "^2You Show ID:^0 " .. name .. " " .. dob}
-        })
-    elseif GetDistanceBetweenCoords(playerCoords, GetEntityCoords(GetPlayerPed(senderID)), true) <= radius then
+    if GetDistanceBetweenCoords(playerCoords, GetEntityCoords(GetPlayerPed(senderID)), true) <= radius then
         TriggerEvent('chat:addMessage', {
             color = { 255, 255, 255 },
             multiline = true,
