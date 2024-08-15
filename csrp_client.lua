@@ -1,12 +1,14 @@
+-- Harley Kradovill
+-- For use by Coastal State Roleplay
+-- https://www.coastalstateroleplay.com/
+
 json = require("json")
-
--- Add command suggestions
 TriggerEvent('chat:addSuggestion', '/rti', 'Set a GPS route to your selected call', {})
-
 TriggerEvent('chat:addSuggestion', '/vehreg', 'Register your current vehicle to your selected identity', {})
-
 TriggerEvent('chat:addSuggestion', '/showid', 'Show your selected identity to nearby players', {})
 
+
+local activeBlips = {}
 
 RegisterCommand('rti', function()
     TriggerServerEvent('fetchIncidentDetails')
@@ -107,7 +109,7 @@ AddEventHandler("displayId", function(playerSource, senderName, name, dob)
     local senderID = GetPlayerFromServerId(playerSource)
     local playerPed = PlayerPedId()
     local playerCoords = GetEntityCoords(playerPed)
-    local radius = 10.0 
+    local radius = 10.0
 
     if GetDistanceBetweenCoords(playerCoords, GetEntityCoords(GetPlayerPed(senderID)), true) <= radius then
         TriggerEvent('chat:addMessage', {
@@ -118,7 +120,46 @@ AddEventHandler("displayId", function(playerSource, senderName, name, dob)
     end
 end)
 
+RegisterNetEvent('updateBlips')
+AddEventHandler('updateBlips', function(codes)
+    -- Remove all existing blips
+    for _, blip in pairs(activeBlips) do
+        RemoveBlip(blip)
+    end
+    activeBlips = {}
 
+    local postals = LoadResourceFile(GetCurrentResourceName(), 'postals.json')
+    if not postals then
+        print("Error: Unable to load postals.json")
+        return
+    end
+
+    local postalData = json.decode(postals)
+
+    for _, code in ipairs(codes) do
+        for _, postal in pairs(postalData) do
+            if tostring(postal.code) == tostring(code) then
+                local blip = AddBlipForCoord(postal.x, postal.y, postal.z or 0.0)
+                SetBlipSprite(blip, 58)
+                SetBlipDisplay(blip, 2)
+                SetBlipScale(blip, 1.2)
+                SetBlipColour(blip, 30)
+                SetBlipCategory(blip, 2)
+
+
+                SetBlipAsShortRange(blip, false)
+
+                BeginTextCommandSetBlipName("STRING")
+                AddTextComponentString("Call: " .. tostring(code))
+                EndTextCommandSetBlipName(blip)
+
+                table.insert(activeBlips, blip)
+                --print("Blip created at postal code: " .. tostring(code))
+                break
+            end
+        end
+    end
+end)
 
 -- UNIVERSAL FUNCTION TO DRAW NOTIFICATION
 
