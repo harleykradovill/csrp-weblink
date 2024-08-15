@@ -1,3 +1,7 @@
+-- Harley Kradovill
+-- For use by Coastal State Roleplay
+-- https://www.coastalstateroleplay.com/
+
 local apiKey = ''
 
 local oovURL = 'https://coastalstateroleplay.bubbleapps.io/api/1.1/wf/setoov?api_token=' .. apiKey
@@ -5,6 +9,10 @@ local vehregURL = 'https://coastalstateroleplay.bubbleapps.io/api/1.1/wf/registe
 local rtiURL = 'https://coastalstateroleplay.bubbleapps.io/api/1.1/wf/incidentdetails?api_token=' .. apiKey
 local showidURL = 'https://coastalstateroleplay.bubbleapps.io/api/1.1/wf/showid?api_token=' .. apiKey
 
+--[[
+Make a GET request to receive user's currently selected call, and set a GPS route to
+it's postal code.
+--]]
 RegisterServerEvent('fetchIncidentDetails')
 AddEventHandler('fetchIncidentDetails', function()
     local playerSource = source
@@ -37,7 +45,10 @@ AddEventHandler('fetchIncidentDetails', function()
     end
 end)
 
-
+--[[
+Check if a user is in a POLICE vehicle. If so, send a boolean to the CAD
+to show they are not oov.
+--]]
 RegisterServerEvent('updateVehicleStatus')
 AddEventHandler('updateVehicleStatus', function(isInVehicleClass18)
     local playerSource = source
@@ -62,6 +73,11 @@ AddEventHandler('updateVehicleStatus', function(isInVehicleClass18)
     end
 end)
 
+--[[
+Makes a POST request to register a vehicle within the CAD System.
+
+Usage: /vehreg
+--]]
 RegisterServerEvent('sendVehicleRegistration')
 AddEventHandler('sendVehicleRegistration', function(plate, make, model, color)
     local playerSource = source
@@ -96,6 +112,11 @@ AddEventHandler('sendVehicleRegistration', function(plate, make, model, color)
     end
 end)
 
+--[[
+Makes a GET request to receive a user's currently selected identities information.
+
+Usage: /showid
+--]]
 RegisterServerEvent('showId')
 AddEventHandler('showId', function()
     local playerSource = source
@@ -132,5 +153,67 @@ AddEventHandler('showId', function()
         end, 'POST', payload, { ["Content-Type"] = 'application/json' })
     else
         print("Error: Discord ID not found for the player.")
+    end
+end)
+
+--[[
+Creates an endpoint /updateBlips which receives POST requests.
+
+Used to update the user's calls on the map & minimap.
+--]]
+SetHttpHandler(function(request, response)
+    -- API Key to prevent malicious people
+    local authHeader = request.headers['Authorization']
+    if not authHeader or not authHeader:find("Bearer ") then
+        response.writeHead(401, { ['Content-Type'] = 'application/json' })
+        response.send(json.encode({ status = "error", message = "Unauthorized" }))
+        return
+    end
+
+    local receivedApiKey = authHeader:sub(8)
+    if receivedApiKey ~= apiKey then
+        response.writeHead(401, { ['Content-Type'] = 'application/json' })
+        response.send(json.encode({ status = "error", message = "Unauthorized" }))
+        return
+    end
+
+    if request.path == "/updateBlips" then
+        request.setDataHandler(function(data)
+            --print("Received request body: " .. data)
+
+            local success, parsedData = pcall(json.decode, data)
+            if not success then
+                print("Error decoding JSON: " .. parsedData)
+                response.writeHead(400, { ['Content-Type'] = 'application/json' })
+                response.send(json.encode({ status = "error", message = "Invalid JSON" }))
+                return
+            end
+
+            if parsedData and parsedData.discordid and parsedData.codes then
+                local discordid = parsedData.discordid
+                local codes = parsedData.codes
+
+                for _, playerId in ipairs(GetPlayers()) do
+                    local identifiers = GetPlayerIdentifiers(playerId)
+                    for _, id in pairs(identifiers) do
+                        if id:find("discord:") and id:sub(9) == discordid then
+                            TriggerClientEvent('updateBlips', playerId, codes)
+                            --print("Sent codes to player: " .. playerId)
+                            break
+                        end
+                    end
+                end
+
+                response.writeHead(200, { ['Content-Type'] = 'application/json' })
+                response.send(json.encode({ status = "success", message = "Success" }))
+            else
+                print("Error: 'discordid' or 'codes' key not found in the data.")
+                response.writeHead(400, { ['Content-Type'] = 'application/json' })
+                response.send(json.encode({ status = "error", message = "'discordid' or 'codes' key not found" }))
+            end
+        end)
+    else
+        response.writeHead(404, { ['Content-Type'] = 'application/json' })
+        response.send(json.encode({ status = "error", message = "Route not found" }))
     end
 end)
