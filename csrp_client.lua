@@ -10,10 +10,16 @@ TriggerEvent('chat:addSuggestion', '/showid', 'Show your selected identity to ne
 
 local activeBlips = {}
 
+--[[
+Trigger server event for route to incident
+--]]
 RegisterCommand('rti', function()
     TriggerServerEvent('fetchIncidentDetails')
 end, false)
 
+--[[
+Sets a GPS route on the map using postals.json
+--]]
 RegisterNetEvent("setGpsRoute")
 AddEventHandler("setGpsRoute", function(postalCode)
     local postals = LoadResourceFile(GetCurrentResourceName(), 'postals.json')
@@ -41,6 +47,9 @@ AddEventHandler("setGpsRoute", function(postalCode)
     end
 end)
 
+--[[
+Loop to check if current vehicle is popo car, and if so, change OOV status
+--]]
 local wasInVehicleClass18 = false
 Citizen.CreateThread(function()
     while true do
@@ -62,6 +71,9 @@ Citizen.CreateThread(function()
     end
 end)
 
+--[[
+Register the current vehicle to the player's identity
+--]]
 RegisterCommand('vehreg', function(source, args, rawCommand)
     local vehicle = GetVehiclePedIsIn(PlayerPedId(), false)
 
@@ -78,6 +90,9 @@ RegisterCommand('vehreg', function(source, args, rawCommand)
     TriggerServerEvent('sendVehicleRegistration', plate, make, model, color)
 end, false)
 
+--[[
+Match the vehicle color ID to a color in vehicle-colors.json
+--]]
 function GetVehiclePrimaryColorText(vehicle)
     local primaryColorID, _ = GetVehicleColours(vehicle)
     local colorJson = LoadResourceFile(GetCurrentResourceName(), "vehicle-colors.json")
@@ -104,25 +119,34 @@ RegisterCommand('showid', function()
     TriggerServerEvent('showId')
 end, false)
 
+--[[
+Make a proximity chat using the API return
+--]]
 RegisterNetEvent("displayId")
 AddEventHandler("displayId", function(playerSource, senderName, name, dob)
     local senderID = GetPlayerFromServerId(playerSource)
-    local playerPed = PlayerPedId()
-    local playerCoords = GetEntityCoords(playerPed)
-    local radius = 10.0
+    if senderID ~= -1 then
+        local playerPed = PlayerPedId()
+        local playerCoords = GetEntityCoords(playerPed)
+        local senderPed = GetPlayerPed(senderID)
+        local senderCoords = GetEntityCoords(senderPed)
+        local radius = 3.0
 
-    if GetDistanceBetweenCoords(playerCoords, GetEntityCoords(GetPlayerPed(senderID)), true) <= radius then
-        TriggerEvent('chat:addMessage', {
-            color = { 255, 255, 255 },
-            multiline = true,
-            args = {"", "^2" .. senderName .. " Shows ID:^0 " .. name .. " " .. dob}
-        })
+        if #(playerCoords - senderCoords) <= radius then
+            TriggerEvent('chat:addMessage', {
+                color = { 255, 255, 255 },
+                multiline = true,
+                args = {"", "^2" .. senderName .. " Shows ID:^0 " .. name .. " " .. dob}
+            })
+        end
     end
 end)
 
+--[[
+Set the blips on the map based on the postal codes
+--]]
 RegisterNetEvent('updateBlips')
 AddEventHandler('updateBlips', function(codes)
-    -- Remove all existing blips
     for _, blip in pairs(activeBlips) do
         RemoveBlip(blip)
     end
@@ -140,10 +164,10 @@ AddEventHandler('updateBlips', function(codes)
         for _, postal in pairs(postalData) do
             if tostring(postal.code) == tostring(code) then
                 local blip = AddBlipForCoord(postal.x, postal.y, postal.z or 0.0)
-                SetBlipSprite(blip, 58)
+                SetBlipSprite(blip, 37)
                 SetBlipDisplay(blip, 2)
-                SetBlipScale(blip, 1.2)
-                SetBlipColour(blip, 30)
+                SetBlipScale(blip, 0.6)
+                SetBlipColour(blip, 49)
                 SetBlipCategory(blip, 2)
 
 
