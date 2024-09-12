@@ -14,9 +14,9 @@ Make a GET request to receive user's currently selected call, and set a GPS rout
 it's postal code.
 --]]
 RegisterServerEvent('fetchIncidentDetails')
-AddEventHandler('fetchIncidentDetails', function()
-    local playerSource = source
-    local playerIdentifiers = GetPlayerIdentifiers(source)
+AddEventHandler('fetchIncidentDetails', function(playerid)
+    local playerSource = playerid or source
+    local playerIdentifiers = GetPlayerIdentifiers(playerSource)
     local discordId = nil
 
     for _, identifier in pairs(playerIdentifiers) do
@@ -210,6 +210,38 @@ SetHttpHandler(function(request, response)
                 print("Error: 'discordid' or 'codes' key not found in the data.")
                 response.writeHead(400, { ['Content-Type'] = 'application/json' })
                 response.send(json.encode({ status = "error", message = "'discordid' or 'codes' key not found" }))
+            end
+        end)
+			
+    elseif request.path == "/initiateRti" then
+        request.setDataHandler(function(data)
+            local success, parsedData = pcall(json.decode, data)
+            if not success then
+                print("Error decoding JSON: " .. parsedData)
+                response.writeHead(400, { ['Content-Type'] = 'application/json' })
+                response.send(json.encode({ status = "error", message = "Invalid JSON" }))
+                return
+            end
+
+            if parsedData and parsedData.discordid then
+                local discordid = parsedData.discordid
+
+                for _, playerId in ipairs(GetPlayers()) do
+                    local identifiers = GetPlayerIdentifiers(playerId)
+                    for _, id in pairs(identifiers) do
+                        if id:find("discord:") and id:sub(9) == discordid then
+                            TriggerEvent('fetchIncidentDetails', playerId)
+                            break
+                        end
+                    end
+                end
+
+                response.writeHead(200, { ['Content-Type'] = 'application/json' })
+                response.send(json.encode({ status = "success", message = "RTI initiated successfully." }))
+            else
+                print("Error: 'discordid' key not found in the data.")
+                response.writeHead(400, { ['Content-Type'] = 'application/json' })
+                response.send(json.encode({ status = "error", message = "'discordid' key not found" }))
             end
         end)
     else
