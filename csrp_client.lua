@@ -3,9 +3,6 @@
 -- https://www.coastalstateroleplay.com/
 
 json = require("json")
-TriggerEvent('chat:addSuggestion', '/rti', 'Set a GPS route to your selected call', {})
-TriggerEvent('chat:addSuggestion', '/vehreg', 'Register your current vehicle to your selected identity', {})
-TriggerEvent('chat:addSuggestion', '/showid', 'Show your selected identity to nearby players', {})
 
 
 local activeBlips = {}
@@ -20,8 +17,24 @@ end, false)
 --[[
 Sets a GPS route on the map using postals.json
 --]]
+local waypointBlip = nil
+local arrivalDistanceThreshold = 125.0
+
 RegisterNetEvent("setGpsRoute")
 AddEventHandler("setGpsRoute", function(postalCode)
+    if DoesBlipExist(waypointBlip) then
+        RemoveBlip(waypointBlip)
+        waypointBlip = nil
+
+        exports.csrpnot:SendAdvanced({
+            message = '~b~Routing Removed',
+            title = 'Coastal State Roleplay',
+            subject = 'PMCSS',
+            icon = 'GST_MAPPER',
+        })
+        return
+    end
+
     local postals = LoadResourceFile(GetCurrentResourceName(), 'postals.json')
     if not postals then
         print("Error: Unable to load postals.json")
@@ -39,13 +52,55 @@ AddEventHandler("setGpsRoute", function(postalCode)
     end
 
     if targetCoords then
-        SetNewWaypoint(targetCoords.x, targetCoords.y)
-        -- print("Waypoint set to postal code: " .. tostring(postalCode))
-        drawNotification("Waypoint Set: " .. tostring(postalCode))
+        SetWaypointOff()
+        if DoesBlipExist(waypointBlip) then
+            RemoveBlip(waypointBlip)
+        end
+
+        waypointBlip = AddBlipForCoord(targetCoords.x, targetCoords.y, targetCoords.z)
+        SetBlipSprite(waypointBlip, 0) 
+        SetBlipColour(waypointBlip, 1)
+        SetBlipRoute(waypointBlip, true)
+        SetBlipRouteColour(waypointBlip, 1)
+
+        BeginTextCommandSetBlipName("STRING")
+        AddTextComponentString("Custom Waypoint")
+        EndTextCommandSetBlipName(waypointBlip)
+
+        exports.csrpnot:SendAdvanced({
+            message = '~b~Routing To Call',
+            title = 'Coastal State Roleplay',
+            subject = 'PMCSS',
+            icon = 'GST_MAPPER',
+        })
+
+        Citizen.CreateThread(function()
+            while DoesBlipExist(waypointBlip) do
+                local playerCoords = GetEntityCoords(PlayerPedId())
+                local distance = #(playerCoords - targetCoords)
+
+                if distance <= arrivalDistanceThreshold then
+                    RemoveBlip(waypointBlip)
+                    waypointBlip = nil
+
+                    exports.csrpnot:SendAdvanced({
+                        message = '~b~You Have Arrived',
+                        title = 'Coastal State Roleplay',
+                        subject = 'PMCSS',
+                        icon = 'GST_MAPPER',
+                    })
+
+                    break
+                end
+
+                Citizen.Wait(1000)
+            end
+        end)
     else
         print("Error: Postal code not found in postals.json")
     end
 end)
+
 
 --[[
 Loop to check if current vehicle is popo car, and if so, change OOV status
@@ -188,7 +243,10 @@ end)
 -- UNIVERSAL FUNCTION TO DRAW NOTIFICATION
 
 function drawNotification(message)
-    SetNotificationTextEntry("STRING")
-    AddTextComponentString(message)
-    DrawNotification(false, true)
+    exports.csrpnot:SendAdvanced({
+        message = message, 
+        title = 'Coastal State Roleplay',
+        subject = 'CAD', 
+        icon = 'CSRP_ICON',
+    })
 end
