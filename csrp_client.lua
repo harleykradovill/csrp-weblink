@@ -14,6 +14,10 @@ RegisterCommand('rti', function()
     TriggerServerEvent('fetchIncidentDetails')
 end, false)
 
+RegisterCommand('crti', function()
+    removeWaypointBlip()
+end, false)
+
 --[[
 Sets a GPS route on the map using postals.json
 --]]
@@ -22,19 +26,6 @@ local arrivalDistanceThreshold = 125.0
 
 RegisterNetEvent("setGpsRoute")
 AddEventHandler("setGpsRoute", function(postalCode)
-    if DoesBlipExist(waypointBlip) then
-        RemoveBlip(waypointBlip)
-        waypointBlip = nil
-
-        exports.csrpnot:SendAdvanced({
-            message = '~b~Routing Removed',
-            title = 'Coastal State Roleplay',
-            subject = 'PMCSS',
-            icon = 'GST_MAPPER',
-        })
-        return
-    end
-
     local postals = LoadResourceFile(GetCurrentResourceName(), 'postals.json')
     if not postals then
         print("Error: Unable to load postals.json")
@@ -80,9 +71,7 @@ AddEventHandler("setGpsRoute", function(postalCode)
                 local distance = #(playerCoords - targetCoords)
 
                 if distance <= arrivalDistanceThreshold then
-                    RemoveBlip(waypointBlip)
-                    waypointBlip = nil
-
+                    removeWaypointBlip()
                     exports.csrpnot:SendAdvanced({
                         message = '~b~You Have Arrived',
                         title = 'Coastal State Roleplay',
@@ -100,6 +89,20 @@ AddEventHandler("setGpsRoute", function(postalCode)
         print("Error: Postal code not found in postals.json")
     end
 end)
+
+function removeWaypointBlip()
+    if DoesBlipExist(waypointBlip) then
+        RemoveBlip(waypointBlip)
+        waypointBlip = nil
+
+        exports.csrpnot:SendAdvanced({
+            message = '~b~Routing Removed',
+            title = 'Coastal State Roleplay',
+            subject = 'PMCSS',
+            icon = 'GST_MAPPER',
+        })
+    end
+end
 
 
 --[[
